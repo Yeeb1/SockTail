@@ -63,7 +63,7 @@ The project includes some basic XOR-based obfuscation to evade static detections
 var xorKey = []byte("747sg^8N0$")
 ```
 
-Use `obfuscateAuthKey("tskey-auth-...")` to generate a byte array and embed it into the `obfuscatedAuthKey` variable.
+Use `make obfuscate-key KEY=tskey-auth-client-xxxxx-your-key` to generate a byte array and embed it into the `obfuscatedAuthKey` variable.
 
 The key will be deobfuscated at runtime if no key is passed on the command line.
 
@@ -82,8 +82,6 @@ make obfuscate-key KEY=tskey-auth-client-xxxxx-your-key
 # 3. Build  binaries
 make build
 ```
-
----
 
 ## Notes
 
