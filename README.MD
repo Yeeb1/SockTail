@@ -2,7 +2,7 @@
 
 
 <p align="center">
-  <img src="img/sockstail.png" width="550">
+  <img src="img/sockstail.png" width="250">
 </p>
 
 **SocksTail** is a small binary that joins a device to a Tailscale network and exposes a local SOCKS5 proxy on port `1080`. It's meant for red team operations where you need network access into a target system without setting up wonky port forwards, persistent daemons, or noisy tunnels.
