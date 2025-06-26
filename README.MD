@@ -57,7 +57,7 @@ There’s no persistence. Once the binary exits, the connection to your Tailnet 
 
 ## Obfuscation
 
-The project includes some basic XOR-based obfuscation to evade static detections:
+The project includes some very basic XOR-based obfuscation for the AuthKey to evade static detections:
 
 ```go
 var xorKey = []byte("747sg^8N0$")
