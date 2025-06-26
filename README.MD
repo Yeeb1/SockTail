@@ -7,7 +7,6 @@
 
 **SocksTail** is a small binary that joins a device to a Tailscale network and exposes a local SOCKS5 proxy on port `1080`. It's meant for red team operations where you need network access into a target system without setting up wonky port forwards, persistent daemons, or noisy tunnels.
 
----
 ## Features
 
 * SOCKS5 proxy on port `1080` over Tailscale
@@ -18,7 +17,6 @@
 
 This is not meant for persistence. It's a one-shot SOCKS dropper for red team ops.
 
----
 
 ## Usage
 
@@ -41,7 +39,6 @@ Examples:
     - Custom hostname and runtime-supplied auth key
 ```
 
----
 
 ## How It Works
 
@@ -53,7 +50,6 @@ Examples:
 
 There’s no persistence. Once the binary exits, the connection to your Tailnet is dropped.
 
----
 
 ## Obfuscation
 
@@ -67,7 +63,6 @@ Use `make obfuscate-key KEY=tskey-auth-client-xxxxx-your-key` to generate a byte
 
 The key will be deobfuscated at runtime if no key is passed on the command line.
 
----
 
 ## Build
 
