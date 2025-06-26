@@ -28,7 +28,6 @@ func obfuscateAuthKey(key string) {
 func main() {
 	if len(os.Args) != 2 {
 		fmt.Println("Usage: go run obfuscate_key.go <your-tailscale-auth-key>")
-		fmt.Println("Example: go run obfuscate_key.go tskey-auth-xxxxx-your-real-key")
 		os.Exit(1)
 	}
 	
