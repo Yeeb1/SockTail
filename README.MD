@@ -17,6 +17,14 @@
 
 This is not meant for persistence. It's a one-shot SOCKS dropper for red team ops.
 
+<p align="center">
+  <img src="https://trusted-sec.transforms.svdcdn.com/production/images/Blog-assets/SOCKS_Esteban/Fig3_Esteban.png?w=840&q=90&fm=webp&fit=max&dm=1701370766&s=7fa4e05233215a1f432a7a5d5526ef68" width="300">
+</p>
+<p align="center">
+  <em>Image credit: <a href="https://trustedsec.com/blog/the-socks-we-have-at-home">"The SOCKS We Have at Home" by TrustedSec</a> — thanks for the memes.</em>
+</p>
+
+
 
 ## Usage
 
