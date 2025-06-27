@@ -1,11 +1,11 @@
-# SocksTail
+# SockTail
 
 
 <p align="center">
-  <img src="img/sockstail.png" width="250">
+  <img src="img/SockTail.png" width="250">
 </p>
 
-**SocksTail** is a small binary that joins a device to a Tailscale network and exposes a local SOCKS5 proxy on port `1080`. It's meant for red team operations where you need network access into a target system without setting up wonky port forwards, persistent daemons, or noisy tunnels.
+**SockTail** is a small binary that joins a device to a Tailscale network and exposes a local SOCKS5 proxy on port `1080`. It's meant for red team operations where you need network access into a target system without setting up wonky port forwards, persistent daemons, or noisy tunnels.
 
 ## Features
 
@@ -21,7 +21,7 @@ This is not meant for persistence. It's a one-shot SOCKS dropper for red team op
 ## Usage
 
 ```
-Usage: ./sockstail [hostname] [authkey]
+Usage: ./SockTail [hostname] [authkey]
 
   hostname: Optional. If blank, a random one will be generated
   authkey : Optional. If blank, will use the built-in obfuscated key
@@ -29,20 +29,20 @@ Usage: ./sockstail [hostname] [authkey]
 Port is fixed at 1080.
 
 Examples:
-  ./sockstail
+  ./SockTail
     - Random hostname, embedded key
 
-  ./sockstail vpn-srv-01
+  ./SockTail vpn-srv-01
     - Custom hostname, embedded key
 
-  ./sockstail shellbox-7 tskey-auth-1fXXXXXXXXXXXXXXXXXXXXXXXXXX
+  ./SockTail shellbox-7 tskey-auth-1fXXXXXXXXXXXXXXXXXXXXXXXXXX
     - Custom hostname and runtime-supplied auth key
 ```
 
 
 ## How It Works
 
-1. On startup, SocksTail creates a `tsnet.Server` using the provided (or embedded) Tailscale auth key and hostname.
+1. On startup, SockTail creates a `tsnet.Server` using the provided (or embedded) Tailscale auth key and hostname.
 2. It joins the Tailnet and starts listening on `localhost:1080`.
 3. SOCKS5 negotiation is handled with no authentication (standard NO\_AUTH method).
 4. Any CONNECT requests (IPv4, IPv6, domain) are accepted and forwarded using `tsnet.Dial`.
@@ -82,4 +82,4 @@ make build
 
 * Traffic is end-to-end encrypted via Tailscale/WireGuard.
 * You can use this to pivot into a network, tunnel C2, or access internal services without exposing ports externally.
-* Tailscale ACLs still apply. Make sure your Tailnet allows the correct access to and from the SocksTail node.
+* Tailscale ACLs still apply. Make sure your Tailnet allows the correct access to and from the SockTail node.
