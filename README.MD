@@ -29,22 +29,25 @@ This is not meant for persistence. It's a one-shot SOCKS dropper for red team op
 ## Usage
 
 ```
-Usage: ./SockTail [hostname] [authkey]
+Usage: ./SockTail [hostname] [authkey] [control-url]
 
-  hostname: Optional. If blank, a random one will be generated
-  authkey : Optional. If blank, will use the built-in obfuscated key
-
-Port is fixed at 1080.
+  hostname:    Optional. Auto-generated if not specified
+  authkey:     Optional. Uses embedded key if not specified
+  control-url: Optional. Uses Tailscale default or build-time URL if not specified
+  port:        Fixed at 1080
 
 Examples:
   ./SockTail
-    - Random hostname, embedded key
+    - Auto hostname, embedded key, default control server
 
   ./SockTail vpn-srv-01
-    - Custom hostname, embedded key
+    - Custom hostname, embedded key, default control server
 
   ./SockTail shellbox-7 tskey-auth-1fXXXXXXXXXXXXXXXXXXXXXXXXXX
-    - Custom hostname and runtime-supplied auth key
+    - Custom hostname and runtime auth key, default control server
+
+  ./SockTail my-proxy tskey-auth-1fXXXXXXXXXXXXXXXXXXXXXXXXXX https://headscale.example.com
+    - All custom: hostname, auth key, and control server (e.g., Headscale)
 ```
 
 
@@ -61,15 +64,13 @@ There’s no persistence. Once the binary exits, the connection to your Tailnet 
 
 ## Obfuscation
 
-The project includes some very basic XOR-based obfuscation for the AuthKey to evade static detections:
+The project includes XOR-based obfuscation for the AuthKey to evade static detections. You can embed your auth key at build time using compiler flags - no manual editing required!
 
 ```go
 var xorKey = []byte("747sg^8N0$")
 ```
 
-Use `make obfuscate-key KEY=tskey-auth-client-xxxxx-your-key` to generate a byte array and embed it into the `obfuscatedAuthKey` variable.
-
-The key will be deobfuscated at runtime if no key is passed on the command line.
+The key will be XOR-obfuscated and embedded automatically during the build process if no key is passed on the command line.
 
 
 ## Build
@@ -77,14 +78,25 @@ The key will be deobfuscated at runtime if no key is passed on the command line.
 Written in Go, no external dependencies:
 
 ```bash
-# 1. Obfuscate your key
-make obfuscate-key KEY=tskey-auth-client-xxxxx-your-key
-
-# 2. Update main.go with the generated obfuscatedAuthKey
-
-# 3. Build  binaries
+# Build with embedded fallback key
 make build
+
+# Build with your custom auth key (recommended)
+make build-with-key AUTH_KEY=tskey-auth-client-xxxxx-your-key
+
+# Build with custom auth key and control server (for Headscale, etc.)
+make build-with-config AUTH_KEY=tskey-auth-client-xxxxx-your-key CONTROL_URL=https://headscale.example.com
+
+# Build for all platforms with your key
+make build-all-with-key AUTH_KEY=tskey-auth-client-xxxxx-your-key
+
+# Build for all platforms with custom control server
+make build-all-with-config AUTH_KEY=tskey-auth-client-xxxxx-your-key CONTROL_URL=https://headscale.example.com
 ```
+
+The build system automatically XOR-obfuscates your auth key and embeds both the key and control URL at compile time - no manual source editing required!
+
+**Custom Control Servers**: Perfect for self-hosted Tailscale solutions like [Headscale](https://github.com/juanfont/headscale). Just specify your control server URL and the appropriate auth key for that instance.
 
 ## Notes
 

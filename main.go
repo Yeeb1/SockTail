@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"log"
@@ -28,6 +29,12 @@ const (
 	DEFAULT_PORT   = "1080"
 )
 
+// Build-time injected obfuscated key (hex string)
+var buildTimeObfuscatedKey string
+
+// Build-time injected control server URL
+var buildTimeControlURL string
+
 var obfuscatedAuthKey = []byte{
 	0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x74, 0x68, 0x65, 0x72,
 	0x65, 0x21, 0x20, 0x47, 0x65, 0x6e, 0x65, 0x72, 0x61, 0x6c,
@@ -41,6 +48,13 @@ type SOCKS5Proxy struct {
 }
 
 func deobfuscateAuthKey() string {
+	// If build-time key is available, use it
+	if buildTimeObfuscatedKey != "" {
+		if obfuscatedBytes, err := hex.DecodeString(buildTimeObfuscatedKey); err == nil {
+			return string(xorDecode(obfuscatedBytes))
+		}
+	}
+	// Fallback to embedded key
 	return string(xorDecode(obfuscatedAuthKey))
 }
 
@@ -60,6 +74,10 @@ func obfuscateAuthKey(key string) []byte {
 		result[i] = b ^ xorKey[i%len(xorKey)]
 	}
 	return result
+}
+
+func obfuscateAuthKeyToHex(key string) string {
+	return hex.EncodeToString(obfuscateAuthKey(key))
 }
 
 func generateHostname() string {
@@ -89,19 +107,24 @@ func getSystemHostname() string {
 	return generateHostname()
 }
 
-func NewSOCKS5Proxy(hostname, authkey string) *SOCKS5Proxy {
+func NewSOCKS5Proxy(hostname, authkey, controlURL string) *SOCKS5Proxy {
 	if hostname == "" {
 		hostname = getSystemHostname()
 	}
-	
+
 	if authkey == "" {
 		authkey = deobfuscateAuthKey()
 	}
-	
+
+	if controlURL == "" && buildTimeControlURL != "" {
+		controlURL = buildTimeControlURL
+	}
+
 	s := &tsnet.Server{
-		Hostname: hostname,
-		AuthKey:  authkey,
-		Logf:     func(format string, args ...interface{}) {},
+		Hostname:   hostname,
+		AuthKey:    authkey,
+		ControlURL: controlURL,
+		Logf:       func(format string, args ...interface{}) {},
 	}
 	return &SOCKS5Proxy{server: s}
 }
@@ -303,18 +326,20 @@ func (p *SOCKS5Proxy) relay(conn1, conn2 net.Conn) {
 }
 
 func printUsage() {
-	fmt.Printf("Usage: %s [hostname] [authkey]\n", os.Args[0])
-	fmt.Println("  hostname: Optional. Auto-generated if not specified")
-	fmt.Println("  authkey:  Optional. Uses embedded key if not specified")
-	fmt.Println("  port:     Fixed at 1080")
+	fmt.Printf("Usage: %s [hostname] [authkey] [control-url]\n", os.Args[0])
+	fmt.Println("  hostname:    Optional. Auto-generated if not specified")
+	fmt.Println("  authkey:     Optional. Uses embedded key if not specified")
+	fmt.Println("  control-url: Optional. Uses Tailscale default or build-time URL if not specified")
+	fmt.Println("  port:        Fixed at 1080")
 	fmt.Println("\nExamples:")
-	fmt.Printf("  %s                           # Auto hostname, embedded auth\n", os.Args[0])
-	fmt.Printf("  %s my-proxy                  # Custom hostname, embedded auth\n", os.Args[0])
-	fmt.Printf("  %s my-proxy tskey-auth-...   # Custom hostname and auth\n", os.Args[0])
+	fmt.Printf("  %s                                    # Auto hostname, embedded auth, default control\n", os.Args[0])
+	fmt.Printf("  %s my-proxy                           # Custom hostname, embedded auth, default control\n", os.Args[0])
+	fmt.Printf("  %s my-proxy tskey-auth-...            # Custom hostname and auth, default control\n", os.Args[0])
+	fmt.Printf("  %s my-proxy tskey-auth-... https://headscale.example.com  # All custom\n", os.Args[0])
 }
 
 func main() {
-	var hostname, authkey string
+	var hostname, authkey, controlURL string
 
 	switch len(os.Args) {
 	case 1:
@@ -327,18 +352,31 @@ func main() {
 	case 3:
 		hostname = os.Args[1]
 		authkey = os.Args[2]
+	case 4:
+		hostname = os.Args[1]
+		authkey = os.Args[2]
+		controlURL = os.Args[3]
 	default:
 		printUsage()
 		os.Exit(1)
 	}
 
-	proxy := NewSOCKS5Proxy(hostname, authkey)
-	
+	proxy := NewSOCKS5Proxy(hostname, authkey, controlURL)
+
 	if hostname == "" {
 		hostname = getSystemHostname()
 	}
+
+	controlServer := "default Tailscale"
+	if controlURL != "" {
+		controlServer = controlURL
+	} else if buildTimeControlURL != "" {
+		controlServer = buildTimeControlURL
+	}
+
 	log.Printf("Starting proxy as %s", hostname)
-	
+	log.Printf("Using control server: %s", controlServer)
+
 	if err := proxy.Start(DEFAULT_PORT); err != nil {
 		log.Fatalf("Proxy failed: %v", err)
 	}

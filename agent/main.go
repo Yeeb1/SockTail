@@ -28,10 +28,11 @@ type SOCKS5Proxy struct {
 	server *tsnet.Server
 }
 
-func NewSOCKS5Proxy(hostname, authkey string) *SOCKS5Proxy {
+func NewSOCKS5Proxy(hostname, authkey, controlURL string) *SOCKS5Proxy {
 	s := &tsnet.Server{
-		Hostname: hostname,
-		AuthKey:  authkey,
+		Hostname:   hostname,
+		AuthKey:    authkey,
+		ControlURL: controlURL,
 	}
 	return &SOCKS5Proxy{server: s}
 }
@@ -230,22 +231,33 @@ func (p *SOCKS5Proxy) relay(conn1, conn2 net.Conn) {
 
 func main() {
 	if len(os.Args) < 3 {
-		log.Fatal("Usage: socks5-proxy <hostname> <auth-key> [port]")
+		log.Fatal("Usage: socks5-proxy <hostname> <auth-key> [port] [control-url]")
 	}
 
 	hostname := os.Args[1]
 	authkey := os.Args[2]
 	port := "1080"
+	controlURL := ""
+
 	if len(os.Args) > 3 {
 		port = os.Args[3]
 	}
+	if len(os.Args) > 4 {
+		controlURL = os.Args[4]
+	}
 
-	proxy := NewSOCKS5Proxy(hostname, authkey)
-	
+	proxy := NewSOCKS5Proxy(hostname, authkey, controlURL)
+
+	controlServer := "default Tailscale"
+	if controlURL != "" {
+		controlServer = controlURL
+	}
+
 	log.Printf("Starting SOCKS5 proxy with hostname: %s", hostname)
+	log.Printf("Using control server: %s", controlServer)
 	log.Printf("Connecting to Tailscale network...")
 	log.Printf("Proxy will be available on port %s once connected", port)
-	
+
 	if err := proxy.Start(port); err != nil {
 		log.Fatalf("Failed to start proxy: %v", err)
 	}
